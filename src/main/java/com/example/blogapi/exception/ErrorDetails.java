@@ -1,20 +1,20 @@
 package com.example.blogapi.exception;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 public class ErrorDetails {
-    private Date timestamp;
+    private LocalDateTime timestamp;
     private String message;
     private String details;
 
-    public ErrorDetails(Date timestamp, String message, String details) {
+    public ErrorDetails(LocalDateTime timestamp, String message, String details) {
         super();
         this.timestamp = timestamp;
         this.message = message;
         this.details = details;
     }
 
-    public Date getTimestamp() {
+    public LocalDateTime getTimestamp() {
         return timestamp;
     }
 

@@ -1,6 +1,7 @@
 package com.example.blogapi.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import com.example.blogapi.exception.ErrorDetails;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -59,7 +60,6 @@ public class ApiResponse<T> {
     }
 
     // Error Response
-
     public static <T> ApiResponse<T> error(String message, int statusCode) {
         return ApiResponse.<T>builder()
                 .success(false)

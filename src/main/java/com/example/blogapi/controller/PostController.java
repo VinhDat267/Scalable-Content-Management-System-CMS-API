@@ -10,12 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.blogapi.dto.request.PostCreateRequest;
+import com.example.blogapi.dto.response.ApiResponse;
 import com.example.blogapi.dto.response.PostResponse;
 import com.example.blogapi.dto.request.PostUpdateRequest;
 import com.example.blogapi.service.PostService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,35 +31,41 @@ import org.springframework.web.bind.annotation.PutMapping;
 public class PostController {
     private final PostService postService;
 
-    @Operation(summary = "Tạo một bài viết mới", description = "Tạo một bài viết mới và liên kết nó với một người dùng.")
-    @ApiResponse(responseCode = "201", description = "Tạo thành công")
-    @ApiResponse(responseCode = "400", description = "Dữ liệu đầu vào không hợp lệ")
     @PostMapping
-    public ResponseEntity<PostResponse> createPost(@Valid @RequestBody PostCreateRequest request) {
+    public ResponseEntity<ApiResponse<PostResponse>> createPost(@Valid @RequestBody PostCreateRequest request) {
         PostResponse createdPost = postService.createPost(request);
-        return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
+        ApiResponse<PostResponse> response = ApiResponse.created(createdPost);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<PostResponse>> getAllPosts() {
-        return ResponseEntity.ok(postService.getAllPosts());
+    public ResponseEntity<ApiResponse<List<PostResponse>>> getAllPosts() {
+        List<PostResponse> posts = postService.getAllPosts();
+        ApiResponse<List<PostResponse>> response = ApiResponse.success(posts, "Fetched all posts successfully");
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PostResponse> getPostById(@PathVariable Long id) {
-        return ResponseEntity.ok(postService.getPostById(id));
+    public ResponseEntity<ApiResponse<PostResponse>> getPostById(@PathVariable Long id) {
+        PostResponse post = postService.getPostById(id);
+        ApiResponse<PostResponse> response = ApiResponse.success(post, "Post retrieved successfully");
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PostResponse> updatePost(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<PostResponse>> updatePost(@PathVariable Long id,
             @Valid @RequestBody PostUpdateRequest request) {
-        return ResponseEntity.ok(postService.updatePost(id, request));
+
+        PostResponse post = postService.updatePost(id, request);
+        ApiResponse<PostResponse> response = ApiResponse.success(post, "Post updated successfully");
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable Long id) {
         postService.deletePost(id);
-        return ResponseEntity.noContent().build();
+        ApiResponse<Void> response = ApiResponse.success(null, "Post deleted successfully");
+        return ResponseEntity.ok(response);
     }
 
 }
