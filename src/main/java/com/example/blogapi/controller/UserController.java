@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.blogapi.dto.request.UserCreateRequest;
+import com.example.blogapi.dto.response.ApiResponse;
 import com.example.blogapi.dto.response.UserResponse;
 import com.example.blogapi.service.UserService;
 
@@ -27,25 +28,31 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserCreateRequest request) {
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(@Valid @RequestBody UserCreateRequest request) {
         UserResponse newUser = userService.createUser(request);
-        return new ResponseEntity<>(newUser, HttpStatus.CREATED);
+        ApiResponse<UserResponse> response = ApiResponse.created(newUser);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long id) {
+        UserResponse user = userService.getUserById(id);
+        ApiResponse<UserResponse> response = ApiResponse.success(user, "User retrieved successfully");
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
+        List<UserResponse> users = userService.getAllUsers();
+        ApiResponse<List<UserResponse>> response = ApiResponse.success(users, "Fetched all users successfully");
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        ApiResponse<Void> response = ApiResponse.success(null, "User deleted successfully");
+        return ResponseEntity.ok(response);
     }
 
 }
