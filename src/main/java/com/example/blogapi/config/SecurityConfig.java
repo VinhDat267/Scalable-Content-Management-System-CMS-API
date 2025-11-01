@@ -27,7 +27,12 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/v1/users/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/posts/**", "/api/v1/posts/{postId}/comments/**")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/posts/**",
+                                "/api/v1/posts/search/**",
+                                "/api/v1/posts/user/**",
+                                "/api/v1/posts/recent/**",
+                                "/api/v1/posts/{postId}/comments/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(withDefaults());
