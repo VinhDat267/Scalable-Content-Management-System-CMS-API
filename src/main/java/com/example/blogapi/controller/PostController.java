@@ -14,11 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.example.blogapi.config.OpenApiConfig;
 import com.example.blogapi.dto.request.PostCreateRequest;
 import com.example.blogapi.dto.response.ApiResponse;
 import com.example.blogapi.dto.response.PostResponse;
-import com.example.blogapi.dto.response.ApiResponse.ApiResponseBuilder;
 import com.example.blogapi.dto.request.PostUpdateRequest;
 import com.example.blogapi.service.PostService;
 

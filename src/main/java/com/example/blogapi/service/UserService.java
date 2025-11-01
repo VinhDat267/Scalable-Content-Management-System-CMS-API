@@ -3,6 +3,8 @@ package com.example.blogapi.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,8 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole("ROLE_USER");
         User savedUser = userRepository.save(user);
+
+        log.info("User created successfully with ID: {}", savedUser.getId());
         return userMapper.toUserResponse(savedUser);
     }
 
@@ -51,10 +55,63 @@ public class UserService {
         return userMapper.toUserResponse(user);
     }
 
+    /**
+     * Lấy tất cả users với phân trang và sắp xếp
+     * 
+     * @param pageable chứa thông tin về page, size, sort
+     * @return Page<UserResponse>
+     */
+    @Transactional(readOnly = true)
+    public Page<UserResponse> getAllUsers(Pageable pageable) {
+        log.info("Fetching users - Page: {}, Size: {}, Sort: {}",
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pageable.getSort());
+
+        Page<User> userPage = userRepository.findAll(pageable);
+        Page<UserResponse> responsePage = userPage.map(userMapper::toUserResponse);
+
+        log.info("Fetched {} users out of {} total", responsePage.getNumberOfElements(),
+                responsePage.getTotalElements());
+
+        return responsePage;
+    }
+
+    /**
+     * Method cũ không dùng pagination (deprecated)
+     * Giữ lại để backward compatibility
+     */
+    @Deprecated
     @Transactional(readOnly = true)
     public List<UserResponse> getAllUsers() {
-        log.info("Fetching all users");
-        return userRepository.findAll().stream().map(userMapper::toUserResponse).collect(Collectors.toList());
+        log.warn("⚠️ Using deprecated getAllUsers() without pagination! Consider migrating to paginated version.");
+        return userRepository.findAll().stream()
+                .map(userMapper::toUserResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserResponse> searchUsers(String keyword, Pageable pageable) {
+        log.info("Searching users with keyword: '{}' - Page: {}, Size: {}",
+                keyword,
+                pageable.getPageNumber(),
+                pageable.getPageSize());
+
+        Page<User> userPage = userRepository.searchByUsername(keyword, pageable);
+        log.info("Found {} users matching keyword '{}'", userPage.getTotalElements(), keyword);
+        return userPage.map(userMapper::toUserResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserResponse> getUsersByRole(String role, Pageable pageable) {
+
+        log.info("Fetching users with role: {} - Page: {}, Size: {}",
+                role,
+                pageable.getPageNumber(),
+                pageable.getPageSize());
+
+        Page<User> userPage = userRepository.findByRole(role, pageable);
+        return userPage.map(userMapper::toUserResponse);
     }
 
     @Transactional
