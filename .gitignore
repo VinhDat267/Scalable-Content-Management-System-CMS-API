@@ -1,5 +1,7 @@
 HELP.md
 target/
+bin/
+effective-pom
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -31,6 +33,12 @@ build/
 
 ### VS Code ###
 .vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+*.code-workspace
 
 
 ### Upgrade Plan ###
