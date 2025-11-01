@@ -1,7 +1,6 @@
 package com.example.blogapi.dto.response;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 import com.example.blogapi.exception.ErrorDetails;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -24,7 +23,7 @@ public class ApiResponse<T> {
     private Integer statusCode;
     private String path;
 
-    private PageMetadata pagination;
+    private PageMetadata pageMetadata;
 
     private ErrorDetails error;
 

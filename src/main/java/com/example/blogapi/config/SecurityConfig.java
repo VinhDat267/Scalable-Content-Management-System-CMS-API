@@ -21,7 +21,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+        http.csrf(csrf -> {
+            csrf.ignoringRequestMatchers("/h2-console/**");
+        }).csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/v1/users/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()

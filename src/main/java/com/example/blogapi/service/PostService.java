@@ -1,8 +1,11 @@
 package com.example.blogapi.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,10 +51,104 @@ public class PostService {
 
     }
 
+    /**
+     * Lấy tất cả posts với phân trang và sắp xếp
+     * 
+     * @param pageable chứa thông tin về page, size, sort
+     * @return Page<PostResponse>
+     */
+    @Transactional(readOnly = true)
+    public Page<PostResponse> getAllPosts(Pageable pageable) {
+        log.info("Fetching posts - Page: {}, Size: {}, Sort: {}",
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pageable.getSort());
+
+        Page<Post> postPage = postRepository.findAll(pageable);
+        Page<PostResponse> responsePage = postPage.map(postMapper::toPostResponse);
+
+        log.info("Fetched {} posts out of {} total",
+                responsePage.getNumberOfElements(),
+                responsePage.getTotalElements());
+
+        return responsePage;
+
+    }
+
+    /**
+     * Method cũ không dùng pagination (deprecated)
+     * Giữ lại để backward compatibility
+     */
+    @Deprecated
     @Transactional(readOnly = true)
     public List<PostResponse> getAllPosts() {
-        log.info("Fetching all posts");
-        return postRepository.findAll().stream().map(postMapper::toPostResponse).collect(Collectors.toList());
+        log.warn("⚠️ Using deprecated getAllPosts() without pagination! Consider migrating to paginated version.");
+        return postRepository.findAll().stream()
+                .map(postMapper::toPostResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Tìm kiếm posts theo keyword
+     * 
+     * @param keyword  từ khoá tìm kiếm
+     * @param pageable thông tin phân trang
+     * @return Page<PostResponse>
+     */
+    @Transactional(readOnly = true)
+    public Page<PostResponse> searchPosts(String keyword, Pageable pageable) {
+        log.info("Searching posts with keyword: '{}' - Page: {}, Size: {}",
+                keyword,
+                pageable.getPageNumber(),
+                pageable.getPageSize());
+
+        Page<Post> postPage = postRepository.searchPosts(keyword, pageable);
+        log.info("Found {} posts matching keyword '{}'", postPage.getTotalElements(), keyword);
+        return postPage.map(postMapper::toPostResponse);
+    }
+
+    /**
+     * Lấy posts của một user cụ thể
+     * 
+     * @param userId   ID của user
+     * @param pageable thông tin phân trang
+     * @return Page<PostResponse>
+     */
+    @Transactional(readOnly = true)
+    public Page<PostResponse> getPostsByUserId(Long userId, Pageable pageable) {
+
+        log.info("Fetching posts for user ID: {} - Page: {}, Size: {}",
+                userId,
+                pageable.getPageNumber(),
+                pageable.getPageSize());
+
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("Không tìm thấy user với ID: " + userId);
+        }
+
+        Page<Post> postPage = postRepository.findByUserId(userId, pageable);
+
+        return postPage.map(postMapper::toPostResponse);
+
+    }
+
+    /**
+     * Lấy các posts gần đây (trong N ngày)
+     * 
+     * @param days     số ngày
+     * @param pageable thông tin phân trang
+     * @return Page<PostResponse>
+     */
+    @Transactional(readOnly = true)
+    public Page<PostResponse> getRecentPosts(int days, Pageable pageable) {
+        LocalDateTime fromDate = LocalDateTime.now().minusDays(days);
+        log.info("Fetching posts from last {} days - Page: {}, Size: {}",
+                days,
+                pageable.getPageNumber(),
+                pageable.getPageSize());
+        Page<Post> postPage = postRepository.findRecentPosts(fromDate, pageable);
+
+        return postPage.map(postMapper::toPostResponse);
     }
 
     @Transactional(readOnly = true)
