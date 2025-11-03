@@ -9,6 +9,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -16,6 +19,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.blogapi.dto.request.UserCreateRequest;
@@ -242,6 +250,184 @@ class UserServiceTest {
         verify(userRepository, times(1)).existsById(userId);
         verify(userRepository, never()).deleteById(any());
 
+    }
+
+    // ============== TEST CASE 7: Get All Users with Pagination ==============
+    @Test
+    void getAllUsers_withPagination_shouldReturnPageOfUsers() {
+        // ========== ARRANGE ==========
+
+        // 1. Tạo Pageable object (giống trong Controller)
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
+
+        // 2. Tạo danh sách mock users (giả lập data từ DB)
+        User user1 = new User();
+        user1.setId(1L);
+        user1.setUsername("user1");
+        user1.setRole("ROLE_USER");
+
+        User user2 = new User();
+        user2.setId(2L);
+        user2.setUsername("user2");
+        user2.setRole("ROLE_ADMIN");
+
+        User user3 = new User();
+        user3.setId(3L);
+        user3.setUsername("user3");
+        user3.setRole("ROLE_USER");
+
+        List<User> userList = Arrays.asList(user1, user2, user3);
+
+        // 3. Tạo Page<User> với PageImpl
+        // PageImpl(content, pageable, total)
+        Page<User> userPage = new PageImpl<>(
+                userList, // Danh sách items trong trang này
+                pageable, // Thông tin phân trang
+                3 // Tổng số records trong DB
+        );
+
+        // 4. Tạo mock UserResponse cho từng User
+        UserResponse response1 = new UserResponse();
+        response1.setId(1L);
+        response1.setUsername("user1");
+        response1.setRole("ROLE_USER");
+
+        UserResponse response2 = new UserResponse();
+        response2.setId(2L);
+        response2.setUsername("user2");
+        response2.setRole("ROLE_ADMIN");
+
+        UserResponse response3 = new UserResponse();
+        response3.setId(3L);
+        response3.setUsername("user3");
+        response3.setRole("ROLE_USER");
+
+        // 5. "Dạy" các mock objects hoạt động
+        when(userRepository.findAll(pageable)).thenReturn(userPage);
+
+        when(userMapper.toUserResponse(user1)).thenReturn(response1);
+        when(userMapper.toUserResponse(user2)).thenReturn(response2);
+        when(userMapper.toUserResponse(user3)).thenReturn(response3);
+
+        // ========== ACT ==========
+        Page<UserResponse> result = userService.getAllUsers(pageable);
+
+        // ========== ASSERT ==========
+
+        // 1. Verify kết quả không null
+        assertNotNull(result, "Page result không được null");
+
+        // 2. Verify số lượng item trong trang
+        assertEquals(3, result.getContent().size(), "Page phải chứa 3 users");
+
+        // 3. Verify pagination metadata
+        assertEquals(3, result.getTotalElements(), "Tổng số users phải là 3");
+        assertEquals(1, result.getTotalPages(), "Phải có 1 trang (vì 3 users < pageSize 10)");
+        assertEquals(0, result.getNumber(), "Đang ở trang 0");
+        assertEquals(10, result.getSize(), "Page size phải là 10");
+
+        // 4. Verify content trong page
+        List<UserResponse> content = result.getContent();
+        assertEquals("user1", content.get(0).getUsername());
+        assertEquals("user2", content.get(1).getUsername());
+        assertEquals("user3", content.get(2).getUsername());
+
+        // 5. Verify các mock được gọi đúng số lần
+        verify(userRepository, times(1)).findAll(pageable);
+
+        // Mapper được gọi 3 lần (1 lần cho mỗi user)
+        verify(userMapper, times(1)).toUserResponse(user1);
+        verify(userMapper, times(1)).toUserResponse(user2);
+        verify(userMapper, times(1)).toUserResponse(user3);
+    }
+
+    // ======= TEST CASE 8: Get All Users with Pagination - Empty Page======
+    @Test
+    void getAllUsers_whenNoUsers_shouldReturnEmptyPage() {
+        // ========== ARRANGE ==========
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
+
+        Page<User> emptyPage = new PageImpl<>(new ArrayList<>(), pageable, 0);
+
+        when(userRepository.findAll(pageable)).thenReturn(emptyPage);
+
+        // ========== ACT ==========
+        Page<UserResponse> result = userService.getAllUsers(pageable);
+
+        // ========== ASSERT ==========
+        assertNotNull(result, "Result không được null dù Page rỗng");
+        assertEquals(true, result.getContent().isEmpty());
+        assertEquals(0, result.getContent().size());
+        assertEquals(0, result.getTotalElements());
+        assertEquals(0, result.getTotalPages());
+        assertEquals(0, result.getNumber());
+
+        verify(userRepository, times(1)).findAll(pageable);
+        verify(userMapper, never()).toUserResponse(any());
+
+    }
+
+    static User createMockUser(Long userId, String username) {
+        User user = new User();
+        user.setId(userId);
+        user.setUsername(username);
+        return user;
+    }
+
+    // ============== TEST CASE 9: Get All Users - Multiple Pages ==============
+    @Test
+    void getAllUsers_withMultiplePages_shouldReturnCorrectMetadata() {
+
+        // ARRANGE
+        Pageable pageable = PageRequest.of(1, 10, Sort.by("id").ascending());
+
+        List<User> userList = Arrays.asList(
+                createMockUser(10L, "user10"),
+                createMockUser(11L, "user11"),
+                createMockUser(12L, "user12"),
+                createMockUser(13L, "user13"),
+                createMockUser(14L, "user14"),
+                createMockUser(15L, "user15"),
+                createMockUser(16L, "user16"),
+                createMockUser(17L, "user17"),
+                createMockUser(18L, "user18"),
+                createMockUser(19L, "user19"));
+
+        Page<User> userPage = new PageImpl<>(
+                userList,
+                pageable,
+                25);
+
+        for (User user : userList) {
+            UserResponse response = new UserResponse();
+            response.setId(user.getId());
+            response.setUsername(user.getUsername());
+            response.setRole(user.getRole());
+            when(userMapper.toUserResponse(user)).thenReturn(response);
+        }
+
+        when(userRepository.findAll(pageable)).thenReturn(userPage);
+
+        // ACT
+        Page<UserResponse> result = userService.getAllUsers(pageable);
+
+        // ASSERT
+        assertNotNull(result, "Page Result không được null");
+        assertEquals(10, result.getContent().size(), "Page phải chứa 10 users");
+
+        // Verify Pagination
+        assertEquals(25, result.getTotalElements(), "Tổng số users phải là 25");
+        assertEquals(3, result.getTotalPages(), "Tổng số trang phải là 3");
+        assertEquals(1, result.getNumber(), "Trang hiện phải là 1");
+        assertEquals(10, result.getSize(), "Tổng số user tối đa của trang hiện tại là 10");
+        assertEquals(true, result.hasNext());
+        assertEquals(true, result.hasPrevious());
+
+        assertEquals("user19", result.getContent().get(9).getUsername());
+        assertEquals("user10", result.getContent().get(0).getUsername());
+
+        verify(userRepository, times(1)).findAll(pageable);
+        verify(userMapper, times(10)).toUserResponse(any(User.class));
     }
 
 }
