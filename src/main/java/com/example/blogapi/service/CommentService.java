@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.blogapi.dto.request.CommentCreateRequest;
-import com.example.blogapi.dto.response.CommentResponse;
 import com.example.blogapi.dto.request.CommentUpdateRequest;
+import com.example.blogapi.dto.response.CommentResponse;
 import com.example.blogapi.entity.Comment;
 import com.example.blogapi.entity.Post;
 import com.example.blogapi.entity.User;
