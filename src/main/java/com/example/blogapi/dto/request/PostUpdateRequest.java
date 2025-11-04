@@ -12,5 +12,6 @@ public class PostUpdateRequest {
     private String title;
 
     @NotBlank(message = "Content không được trống.")
+    @Size(max = 10000, message = "Nội dung không được vượt quá 10,000 ký tự")
     private String content;
 }

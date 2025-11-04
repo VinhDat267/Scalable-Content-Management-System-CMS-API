@@ -2,6 +2,7 @@ package com.example.blogapi.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -12,9 +13,11 @@ public class PostCreateRequest {
     private String title;
 
     @NotBlank(message = "Nội dung không được để trống")
+    @Size(max = 10000, message = "Nội dung không được vượt quá 10,000 ký tự")
     private String content;
 
     @NotNull(message = "userId không được để trống")
+    @Positive(message = "userId phải là số dương")
     private Long userId;
 
 }
