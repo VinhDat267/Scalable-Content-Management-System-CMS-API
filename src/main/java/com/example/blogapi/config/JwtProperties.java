@@ -16,8 +16,8 @@ import lombok.Data;
 @Validated
 public class JwtProperties {
     @NotBlank(message = "JWT secret key không được để trống")
-    private String secretKey;
+    private String secret;
 
     @Positive(message = "JWT expiration time phải là số dương")
-    private long expirationMs;
+    private long expiration;
 }

@@ -16,8 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(String username);
 
-    Page<User> findAll(Pageable pageable);
-
     @Query("SELECT u FROM User u WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<User> searchByUsername(@Param("keyword") String keyword, Pageable pageable);
 
