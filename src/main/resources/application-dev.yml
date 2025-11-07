@@ -1,0 +1,64 @@
+# ========================================
+# DEVELOPMENT PROFILE CONFIGURATION
+# ========================================
+
+# Application Info
+spring:
+  application:
+    name: Blog API - Development
+
+  # ========================================
+  # H2 DATABASE CONFIGURATION (In-Memory)
+  # ========================================
+  datasource:
+    url: jdbc:h2:mem:blogdb
+    username: sa
+    password: password
+    driver-class-name: org.h2.Driver
+
+  # ========================================
+  # H2 CONSOLE
+  # ========================================
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # ========================================
+  # JPA/HIBERNATE CONFIGURATION
+  # ========================================
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# ========================================
+# LOGGING
+# ========================================
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+    com:
+      example:
+        blogapi: DEBUG
+
+# ========================================
+# SERVER CONFIGURATION
+# ========================================
+server:
+  port: 8080
+
+# ========================================
+# SECURITY
+# ========================================
+# JWT Configuration (sẽ dùng ở Phase 3)
+app:
+  jwt:
+    secret: day-la-mot-secret-key-rat-dai-va-an-toan-cho-ung-dung-blog
+    expiration: 86400000

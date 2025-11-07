@@ -1,9 +1,9 @@
 version: '3.8'
-
 services:
   postgres:
     image: postgres:17.6-bookworm
     container_name: blog_postgres
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Ndv@22092005
@@ -12,8 +12,6 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    networks:
-      - blog-network
 
   blogapi:
     build: .
@@ -21,18 +19,13 @@ services:
     depends_on:
       - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/blogdb
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: Ndv@22092005
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: blogdb
+      DB_USER: postgres
+      DB_PASSWORD: Ndv@22092005
     ports:
       - "8080:8080"
-    networks:
-      - blog-network
 
 volumes:
   pgdata:
-
-
-networks:
-  blog-network:

@@ -1,0 +1,52 @@
+# ========================================
+# DEFAULT PROFILE: DEV
+# ========================================
+# Tip: Do NOT force prod by default. Override with --spring.profiles.active=prod when needed.
+spring:
+  profiles:
+    active: dev
+
+  # ========================================
+  # COMMON CONFIGURATION (ap dung cho tat ca profiles)
+  # ========================================
+
+  # Application Info
+  application:
+    name: Blog API
+
+# ========================================
+# SERVER CONFIGURATION
+# ========================================
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# ========================================
+# SWAGGER/OPENAPI CONFIGURATION
+# ========================================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+# ========================================
+# LOGGING
+# ========================================
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  level:
+    root: INFO
+
+# ========================================
+# SECURITY (Basic Auth - Phase 1)
+# ========================================
+# JWT se duoc config rieng trong tung profile
+app:
+  jwt:
+    secret: day-la-mot-secret-key-rat-dai-va-an-toan-cho-ung-dung-blog
+    expiration: 86400000

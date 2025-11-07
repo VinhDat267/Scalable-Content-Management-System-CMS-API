@@ -1,0 +1,53 @@
+# ========================================
+# PRODUCTION PROFILE CONFIGURATION
+# ========================================
+
+# Application Info
+spring:
+  application:
+    name: Blog API - Production
+
+  # ========================================
+  # POSTGRESQL DATABASE CONFIGURATION
+  # ========================================
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:blogdb}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# ========================================
+# LOGGING
+# ========================================
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+    com:
+      example:
+        blogapi: INFO
+
+# ========================================
+# SERVER CONFIGURATION
+# ========================================
+server:
+  port: 8080
+
+# ========================================
+# SECURITY
+# ========================================
+# JWT Configuration (sẽ dùng ở Phase 3)
+app:
+  jwt:
+    secret: day-la-mot-secret-key-rat-dai-va-an-toan-cho-ung-dung-blog
+    expiration: 86400000
