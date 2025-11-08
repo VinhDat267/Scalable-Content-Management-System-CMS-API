@@ -3,20 +3,48 @@ package com.example.blogapi.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.example.blogapi.security.JwtAuthenticationFilter;
+import com.example.blogapi.service.CustomUserDetailsService;
+
+import lombok.RequiredArgsConstructor;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomUserDetailsService userDetailsService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
     @Bean
@@ -25,27 +53,28 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .authorizeHttpRequests(authz -> authz
-                        // Public endpoints
-                        .requestMatchers("/api/v1/users/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // ✅ Public endpoints (không cần authentication)
+                        .requestMatchers(
+                                "/api/v1/auth/**", // Login endpoint
+                                "/api/v1/users/register", // Register endpoint
+                                "/swagger-ui/**", // Swagger UI
+                                "/v3/api-docs/**", // OpenAPI docs
+                                "/h2-console/**" // H2 console (dev only)
+                        ).permitAll()
 
-                        // GET endpoints - public
+                        // ✅ GET endpoints - public
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/posts/**",
-                                "/api/v1/posts/search/**",
-                                "/api/v1/posts/user/**",
-                                "/api/v1/posts/recent/**",
-                                "/api/v1/posts/{postId}/comments/**",
                                 "/api/v1/users/**",
-                                "/api/v1/users/search/**",
-                                "/api/v1/users/role/**",
-                                "/api/v1/comments/**",
-                                "/api/v1/comments/user/**",
-                                "/api/v1/comments/search/**")
+                                "/api/v1/comments/**")
                         .permitAll()
 
-                        // Tất cả các request khác cần authentication
+                        // ❌ Tất cả requests khác cần authentication
                         .anyRequest().authenticated())
-                .httpBasic(withDefaults());
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }
