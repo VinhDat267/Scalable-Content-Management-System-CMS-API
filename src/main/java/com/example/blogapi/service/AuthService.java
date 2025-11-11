@@ -20,34 +20,68 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final CustomUserDetailsService userDetailsService;
-    private final UserRepository userRepository;
-    private final JwtProperties jwtProperties;
+        private final AuthenticationManager authenticationManager;
+        private final JwtTokenProvider jwtTokenProvider;
+        private final UserRepository userRepository;
+        private final JwtProperties jwtProperties;
 
-    public AuthResponse login(AuthRequest request) {
-        log.info("Login attempt for username: {}", request.getUsername());
+        /**
+         * Login và generate JWT token
+         * 
+         * 📚 OPTIMIZED VERSION:
+         * - Extract UserDetails từ Authentication object
+         * - Không cần query DB thêm lần nữa
+         * - Better performance: 1 DB query thay vì 2
+         * 
+         * @param request AuthRequest chứa username/password
+         * @return AuthResponse chứa JWT token và user info
+         */
+        public AuthResponse login(AuthRequest request) {
+                log.info("Login attempt for username: {}", request.getUsername());
 
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+                // ========== STEP 1: Authenticate username/password ==========
+                // authenticationManager sẽ:
+                // 1. Load user từ DB (via CustomUserDetailsService)
+                // 2. Verify password với BCrypt
+                // 3. Check account status (enabled, locked, expired)
+                // 4. Return Authentication object chứa UserDetails
+                Authentication authentication = authenticationManager
+                                .authenticate(new UsernamePasswordAuthenticationToken(
+                                                request.getUsername(),
+                                                request.getPassword()));
 
-        log.info("User authenticated successfully: {}", request.getUsername());
+                log.info("User authenticated successfully: {}", request.getUsername());
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+                // ========== STEP 2: Extract UserDetails từ Authentication ==========
+                // ✅ Sử dụng UserDetails đã được load trong authentication
+                // ❌ Thay vì: userDetailsService.loadUserByUsername() (duplicate query)
+                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        String token = jwtTokenProvider.generateToken(userDetails);
-        log.info("JWT token generated for user: {}", request.getUsername());
+                log.debug("UserDetails extracted from Authentication: {}", userDetails.getUsername());
 
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                // ========== STEP 3: Generate JWT Token ==========
+                String token = jwtTokenProvider.generateToken(userDetails);
+                log.info("JWT token generated for user: {}", request.getUsername());
 
-        return AuthResponse.builder()
-                .token(token)
-                .type("Bearer")
-                .username(user.getUsername())
-                .role(user.getRole())
-                .expiresIn(jwtProperties.getExpiration() / 1000)
-                .build();
-    }
+                // ========== STEP 4: Extract role từ authorities ==========
+                // UserDetails.getAuthorities() returns Collection<GrantedAuthority>
+                // Lấy authority đầu tiên (vì chỉ có 1 role)
+                String role = userDetails.getAuthorities().stream()
+                                .findFirst()
+                                .map(auth -> auth.getAuthority())
+                                .orElse("ROLE_USER");
+
+                log.debug("Role extracted from authorities: {}", role);
+
+                // ========== STEP 5: Build Response ==========
+                // ✅ Tất cả data lấy từ UserDetails/Authentication
+                // ✅ Không cần query DB thêm lần nữa
+                return AuthResponse.builder()
+                                .token(token)
+                                .type("Bearer")
+                                .username(userDetails.getUsername())
+                                .role(role)
+                                .expiresIn(jwtProperties.getExpiration() / 1000)
+                                .build();
+        }
 }
