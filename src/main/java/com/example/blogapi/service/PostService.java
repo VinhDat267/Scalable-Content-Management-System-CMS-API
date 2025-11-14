@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ public class PostService {
     private final PostMapper postMapper;
 
     @Transactional
+    @PreAuthorize("isAuthenticated()")
     public PostResponse createPost(PostCreateRequest request) {
         log.info("Creating post for user ID {}", request.getUserId());
 
@@ -161,6 +163,7 @@ public class PostService {
     }
 
     @Transactional
+    @PreAuthorize("@resourceSecurityService.isPostAuthor(#id)")
     public PostResponse updatePost(Long id, PostUpdateRequest request) {
         log.info("Updating post with ID: {}", id);
         Post existingPost = postRepository.findById(id)
@@ -174,6 +177,7 @@ public class PostService {
     }
 
     @Transactional
+    @PreAuthorize("@resourceSecurityService.isPostAuthor(#id)")
     public void deletePost(Long id) {
         log.warn("Deleting post with ID: {}", id);
         if (!postRepository.existsById(id)) {

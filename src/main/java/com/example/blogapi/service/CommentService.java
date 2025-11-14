@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class CommentService {
     private final CommentMapper commentMapper;
 
     @Transactional
+    @PreAuthorize("isAuthenticated()")
     public CommentResponse createComment(Long postId, Long userId, CommentCreateRequest request) {
         log.info("Creating comment for post ID {} by user ID {}", postId, userId);
 
@@ -140,6 +142,7 @@ public class CommentService {
     }
 
     @Transactional
+    @PreAuthorize("@resourceSecurityService.isCommentAuthor(#id)")
     public CommentResponse updateComment(Long postId, Long commentId, CommentUpdateRequest request) {
         log.info("Updating comment ID {} for post ID {}", commentId, postId);
 
@@ -162,6 +165,7 @@ public class CommentService {
     }
 
     @Transactional
+    @PreAuthorize("@resourceSecurityService.isCommentAuthor(#id)")
     public void deleteComment(Long postId, Long commentId) {
         log.warn("Deleting comment ID {} from post ID {}", commentId, postId);
 
