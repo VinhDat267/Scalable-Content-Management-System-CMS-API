@@ -14,10 +14,22 @@ import com.example.blogapi.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Service để check authorization cho resources (Post, Comment)
+ * 
+ * 🎯 MỤC ĐÍCH:
+ * - Check user có phải là author của resource không
+ * - Dùng trong @PreAuthorize expression
+ * 
+ * 📚 SỬ DỤNG:
+ * - @PreAuthorize("@resourceSecurityService.isPostAuthor(#id)")
+ * - @PreAuthorize("@resourceSecurityService.isCommentAuthor(#id)")
+ */
 @Service("resourceSecurityService")
 @RequiredArgsConstructor
 @Slf4j
 public class ResourceSecurityService {
+
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
 
@@ -56,10 +68,18 @@ public class ResourceSecurityService {
         String postAuthor = post.getUser().getUsername();
         boolean isAuthor = postAuthor.equals(currentUsername);
 
-        log.debug("Post author: {}, Current user: {}, Is author: {}", postAuthor, currentUsername, isAuthor);
+        log.debug("Post author: {}, Current user: {}, Is author: {}",
+                postAuthor, currentUsername, isAuthor);
+
         return isAuthor;
     }
 
+    /**
+     * Check user hiện tại có phải là author của comment không
+     * 
+     * @param commentId ID của comment cần check
+     * @return true nếu user là author HOẶC là ADMIN
+     */
     public boolean isCommentAuthor(Long commentId) {
         log.debug("Checking comment ownership for commentId: {}", commentId);
 
@@ -73,6 +93,7 @@ public class ResourceSecurityService {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String currentUsername = userDetails.getUsername();
 
+        // 2. Check if user is ADMIN
         boolean isAdmin = userDetails.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
 
@@ -81,6 +102,7 @@ public class ResourceSecurityService {
             return true;
         }
 
+        // 3. Load comment and check author
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy comment với ID: " + commentId));
 
@@ -89,9 +111,15 @@ public class ResourceSecurityService {
 
         log.debug("Comment author: {}, Current user: {}, Is author: {}",
                 commentAuthor, currentUsername, isAuthor);
+
         return isAuthor;
     }
 
+    /**
+     * Check user hiện tại có role ADMIN không
+     * 
+     * @return true nếu user là ADMIN
+     */
     public boolean isAdmin() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -99,6 +127,7 @@ public class ResourceSecurityService {
         }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return userDetails.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        return userDetails.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
     }
 }

@@ -38,7 +38,7 @@ public class UserService {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole("ROLE_USER");
+        user.setRole(request.getRole());
         User savedUser = userRepository.save(user);
 
         log.info("User created successfully with ID: {}", savedUser.getId());
