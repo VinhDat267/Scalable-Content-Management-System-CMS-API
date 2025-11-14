@@ -9,8 +9,6 @@ import org.springframework.stereotype.Service;
 import com.example.blogapi.config.JwtProperties;
 import com.example.blogapi.dto.request.AuthRequest;
 import com.example.blogapi.dto.response.AuthResponse;
-import com.example.blogapi.entity.User;
-import com.example.blogapi.repository.UserRepository;
 import com.example.blogapi.security.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -22,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthService {
         private final AuthenticationManager authenticationManager;
         private final JwtTokenProvider jwtTokenProvider;
-        private final UserRepository userRepository;
         private final JwtProperties jwtProperties;
 
         /**
