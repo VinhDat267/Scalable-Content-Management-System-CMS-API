@@ -21,74 +21,73 @@ import com.example.blogapi.service.CustomUserDetailsService;
 
 import lombok.RequiredArgsConstructor;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final CustomUserDetailsService userDetailsService;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final CustomUserDetailsService userDetailsService;
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
+        @Bean
+        public AuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+                authProvider.setUserDetailsService(userDetailsService);
+                authProvider.setPasswordEncoder(passwordEncoder());
+                return authProvider;
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+                return config.getAuthenticationManager();
+        }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
-                .csrf(csrf -> csrf.disable())
-                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .authorizeHttpRequests(authz -> authz
-                        // ========== PUBLIC ENDPOINTS ==========
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+                                .csrf(csrf -> csrf.disable())
+                                .headers(headers -> headers
+                                                .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+                                .authorizeHttpRequests(authz -> authz
+                                                // ========== PUBLIC ENDPOINTS ==========
 
-                        // Authentication & Registration
-                        .requestMatchers(
-                                "/api/v1/auth/**",
-                                "/api/v1/users/register")
-                        .permitAll()
+                                                // Authentication & Registration
+                                                .requestMatchers(
+                                                                "/api/v1/auth/**",
+                                                                "/api/v1/users/register")
+                                                .permitAll()
 
-                        // Swagger UI (Complete list)
-                        .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**", // Swagger UI
-                                "/v3/api-docs/**", // OpenAPI docs
-                                "/swagger-resources/**",
-                                "/configuration/**",
-                                "/webjars/**")
-                        .permitAll()
+                                                // Swagger UI (Complete list)
+                                                .requestMatchers(
+                                                                "/swagger-ui.html",
+                                                                "/swagger-ui/**", // Swagger UI
+                                                                "/v3/api-docs/**", // OpenAPI docs
+                                                                "/swagger-resources/**",
+                                                                "/configuration/**",
+                                                                "/webjars/**")
+                                                .permitAll()
 
-                        // H2 Console (Development only)
-                        .requestMatchers("/h2-console/**").permitAll()
+                                                // H2 Console (Development only)
+                                                .requestMatchers("/h2-console/**").permitAll()
 
-                        // ========== READ-ONLY ENDPOINTS (Public) ==========
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/v1/posts/**",
-                                "/api/v1/users/**",
-                                "/api/v1/comments/**")
-                        .permitAll()
+                                                // ========== READ-ONLY ENDPOINTS (Public) ==========
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/v1/posts/**",
+                                                                "/api/v1/users/**",
+                                                                "/api/v1/comments/**")
+                                                .permitAll()
 
-                        // ❌ Tất cả requests khác cần authentication
-                        .anyRequest().authenticated())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
+                                                // ❌ Tất cả requests khác cần authentication
+                                                .anyRequest().authenticated())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authenticationProvider(authenticationProvider())
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                return http.build();
+        }
 }
