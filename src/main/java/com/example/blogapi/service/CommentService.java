@@ -142,7 +142,7 @@ public class CommentService {
     }
 
     @Transactional
-    @PreAuthorize("@resourceSecurityService.isCommentAuthor(#id)")
+    @PreAuthorize("@resourceSecurityService.isCommentAuthor(#commentId)")
     public CommentResponse updateComment(Long postId, Long commentId, CommentUpdateRequest request) {
         log.info("Updating comment ID {} for post ID {}", commentId, postId);
 
@@ -165,7 +165,7 @@ public class CommentService {
     }
 
     @Transactional
-    @PreAuthorize("@resourceSecurityService.isCommentAuthor(#id)")
+    @PreAuthorize("@resourceSecurityService.isCommentAuthor(#commentId)")
     public void deleteComment(Long postId, Long commentId) {
         log.warn("Deleting comment ID {} from post ID {}", commentId, postId);
 

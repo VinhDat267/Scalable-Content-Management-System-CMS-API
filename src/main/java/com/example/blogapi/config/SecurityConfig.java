@@ -55,16 +55,28 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .authorizeHttpRequests(authz -> authz
-                        // ✅ Public endpoints (không cần authentication)
+                        // ========== PUBLIC ENDPOINTS ==========
+
+                        // Authentication & Registration
                         .requestMatchers(
-                                "/api/v1/auth/**", // Login endpoint
-                                "/api/v1/users/register", // Register endpoint
+                                "/api/v1/auth/**",
+                                "/api/v1/users/register")
+                        .permitAll()
+
+                        // Swagger UI (Complete list)
+                        .requestMatchers(
+                                "/swagger-ui.html",
                                 "/swagger-ui/**", // Swagger UI
                                 "/v3/api-docs/**", // OpenAPI docs
-                                "/h2-console/**" // H2 console (dev only)
-                        ).permitAll()
+                                "/swagger-resources/**",
+                                "/configuration/**",
+                                "/webjars/**")
+                        .permitAll()
 
-                        // ✅ GET endpoints - public
+                        // H2 Console (Development only)
+                        .requestMatchers("/h2-console/**").permitAll()
+
+                        // ========== READ-ONLY ENDPOINTS (Public) ==========
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/posts/**",
                                 "/api/v1/users/**",
