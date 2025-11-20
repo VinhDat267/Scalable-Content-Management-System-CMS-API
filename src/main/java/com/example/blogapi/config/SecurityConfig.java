@@ -16,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.example.blogapi.security.CustomAccessDeniedHandler;
+import com.example.blogapi.security.CustomAuthenticationEntryPoint;
 import com.example.blogapi.security.JwtAuthenticationFilter;
 import com.example.blogapi.service.CustomUserDetailsService;
 
@@ -28,6 +30,9 @@ public class SecurityConfig {
 
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final CustomUserDetailsService userDetailsService;
+
+        private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+        private final CustomAccessDeniedHandler accessDeniedHandler;
 
         @Bean
         public PasswordEncoder passwordEncoder() {
@@ -86,6 +91,9 @@ public class SecurityConfig {
                                                 .anyRequest().authenticated())
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .exceptionHandling(exceptions -> exceptions
+                                                .authenticationEntryPoint(authenticationEntryPoint)
+                                                .accessDeniedHandler(accessDeniedHandler))
                                 .authenticationProvider(authenticationProvider())
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
                 return http.build();
