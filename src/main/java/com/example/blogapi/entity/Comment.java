@@ -1,7 +1,5 @@
 package com.example.blogapi.entity;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -19,13 +17,12 @@ import lombok.Setter;
 @Setter
 @Getter
 @NoArgsConstructor
-public class Comment {
+public class Comment extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String body;
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     // Comment -> Post
     @ManyToOne(fetch = FetchType.LAZY)

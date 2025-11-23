@@ -1,6 +1,5 @@
 package com.example.blogapi.entity;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,14 +22,13 @@ import lombok.Setter;
 @Setter
 @Getter
 @NoArgsConstructor
-public class Post {
+public class Post extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String title;
     private String content;
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     // Post -> User
     @ManyToOne(fetch = FetchType.LAZY)
