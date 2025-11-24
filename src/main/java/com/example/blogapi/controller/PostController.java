@@ -37,187 +37,256 @@ import org.springframework.web.bind.annotation.PutMapping;
 @Tag(name = "Post APIs", description = "API để quản lý các bài viết")
 public class PostController {
 
-    private final PostService postService;
+        private final PostService postService;
 
-    @PostMapping
-    @Operation(summary = "Tạo bài viết mới")
-    public ResponseEntity<ApiResponse<PostResponse>> createPost(@Valid @RequestBody PostCreateRequest request) {
-        PostResponse createdPost = postService.createPost(request);
-        ApiResponse<PostResponse> response = ApiResponse.created(createdPost);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
+        @PostMapping
+        @Operation(summary = "Tạo bài viết mới")
+        public ResponseEntity<ApiResponse<PostResponse>> createPost(@Valid @RequestBody PostCreateRequest request) {
+                PostResponse createdPost = postService.createPost(request);
+                ApiResponse<PostResponse> response = ApiResponse.created(createdPost);
+                return new ResponseEntity<>(response, HttpStatus.CREATED);
+        }
 
-    @GetMapping
-    @Operation(summary = "Lấy danh sách posts với phân trang và sắp xếp", description = "Hỗ trợ phân trang, sắp xếp theo nhiều field. Default: page=0, size=10, sort=createdAt,desc")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> getAllPosts(
-            @Parameter(description = "Số trang (bắt đầu từ 0)", example = "0") @RequestParam(defaultValue = "0") int page,
+        @GetMapping
+        @Operation(summary = "Lấy danh sách posts với phân trang và sắp xếp", description = "Hỗ trợ phân trang, sắp xếp theo nhiều field. Default: page=0, size=10, sort=createdAt,desc")
+        public ResponseEntity<ApiResponse<List<PostResponse>>> getAllPosts(
+                        @Parameter(description = "Số trang (bắt đầu từ 0)", example = "0") @RequestParam(defaultValue = "0") int page,
 
-            @Parameter(description = "Số lượng items mỗi trang", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Số lượng items mỗi trang", example = "10") @RequestParam(defaultValue = "10") int size,
 
-            @Parameter(description = "Sắp xếp theo field (có thể nhiều field cách nhau bởi dấu phẩy)", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sắp xếp theo field (có thể nhiều field cách nhau bởi dấu phẩy)", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
 
-            @Parameter(description = "Hướng sắp xếp: asc hoặc desc", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                        @Parameter(description = "Hướng sắp xếp: asc hoặc desc", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
 
-        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+                Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
+                                : Sort.by(sortBy).descending();
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+                Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<PostResponse> postPage = postService.getAllPosts(pageable);
+                Page<PostResponse> postPage = postService.getAllPosts(pageable);
 
-        ApiResponse.PageMetadata pageMetaData = ApiResponse.PageMetadata.builder()
-                .currentPage(postPage.getNumber())
-                .pageSize(postPage.getSize())
-                .totalElements(postPage.getTotalElements())
-                .totalPages(postPage.getTotalPages())
-                .hasNext(postPage.hasNext())
-                .hasPrevious(postPage.hasPrevious())
-                .build();
+                ApiResponse.PageMetadata pageMetaData = ApiResponse.PageMetadata.builder()
+                                .currentPage(postPage.getNumber())
+                                .pageSize(postPage.getSize())
+                                .totalElements(postPage.getTotalElements())
+                                .totalPages(postPage.getTotalPages())
+                                .hasNext(postPage.hasNext())
+                                .hasPrevious(postPage.hasPrevious())
+                                .build();
 
-        ApiResponse<List<PostResponse>> response = ApiResponse.<List<PostResponse>>builder()
-                .success(true)
-                .message("Fetched posts successfully")
-                .data(postPage.getContent())
-                .pageMetadata(pageMetaData)
-                .timestamp(LocalDateTime.now())
-                .statusCode(200)
-                .build();
+                ApiResponse<List<PostResponse>> response = ApiResponse.<List<PostResponse>>builder()
+                                .success(true)
+                                .message("Fetched posts successfully")
+                                .data(postPage.getContent())
+                                .pageMetadata(pageMetaData)
+                                .timestamp(LocalDateTime.now())
+                                .statusCode(200)
+                                .build();
 
-        return ResponseEntity.ok(response);
-    }
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/search")
-    @Operation(summary = "Tìm kiếm posts theo keyword", description = "Tìm kiếm theo title và content của post")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> searchPosts(
-            @Parameter(description = "Từ khóa tìm kiếm", example = "Spring Boot", required = true) @RequestParam String keyword,
+        @GetMapping("/search")
+        @Operation(summary = "Tìm kiếm posts theo keyword", description = "Tìm kiếm theo title và content của post")
+        public ResponseEntity<ApiResponse<List<PostResponse>>> searchPosts(
+                        @Parameter(description = "Từ khóa tìm kiếm", example = "Spring Boot", required = true) @RequestParam String keyword,
 
-            @Parameter(description = "Số trang", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Số trang", example = "0") @RequestParam(defaultValue = "0") int page,
 
-            @Parameter(description = "Số items mỗi trang", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Số items mỗi trang", example = "10") @RequestParam(defaultValue = "10") int size,
 
-            @Parameter(description = "Sắp xếp theo", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sắp xếp theo", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
 
-            @Parameter(description = "Hướng sắp xếp", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                        @Parameter(description = "Hướng sắp xếp", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
 
-        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+                Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
+                                : Sort.by(sortBy).descending();
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+                Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<PostResponse> postPage = postService.searchPosts(keyword, pageable);
+                Page<PostResponse> postPage = postService.searchPosts(keyword, pageable);
 
-        ApiResponse.PageMetadata pageMetadata = ApiResponse.PageMetadata.builder()
-                .currentPage(postPage.getNumber())
-                .pageSize(postPage.getSize())
-                .totalElements(postPage.getTotalElements())
-                .totalPages(postPage.getTotalPages())
-                .hasNext(postPage.hasNext())
-                .hasPrevious(postPage.hasPrevious())
-                .build();
+                ApiResponse.PageMetadata pageMetadata = ApiResponse.PageMetadata.builder()
+                                .currentPage(postPage.getNumber())
+                                .pageSize(postPage.getSize())
+                                .totalElements(postPage.getTotalElements())
+                                .totalPages(postPage.getTotalPages())
+                                .hasNext(postPage.hasNext())
+                                .hasPrevious(postPage.hasPrevious())
+                                .build();
 
-        ApiResponse<List<PostResponse>> response = ApiResponse.<List<PostResponse>>builder()
-                .success(true)
-                .message(String.format("Found %d posts matching '%s'", postPage.getTotalElements(), keyword))
-                .data(postPage.getContent())
-                .pageMetadata(pageMetadata)
-                .timestamp(LocalDateTime.now())
-                .statusCode(200)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+                ApiResponse<List<PostResponse>> response = ApiResponse.<List<PostResponse>>builder()
+                                .success(true)
+                                .message(String.format("Found %d posts matching '%s'", postPage.getTotalElements(),
+                                                keyword))
+                                .data(postPage.getContent())
+                                .pageMetadata(pageMetadata)
+                                .timestamp(LocalDateTime.now())
+                                .statusCode(200)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/user/{userId}")
-    @Operation(summary = "Lấy tất cả posts của một user")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> getPostsByUserId(
-            @Parameter(description = "ID của user", required = true) @PathVariable Long userId,
+        @GetMapping("/user/{userId}")
+        @Operation(summary = "Lấy tất cả posts của một user")
+        public ResponseEntity<ApiResponse<List<PostResponse>>> getPostsByUserId(
+                        @Parameter(description = "ID của user", required = true) @PathVariable Long userId,
 
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir) {
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size,
+                        @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @RequestParam(defaultValue = "desc") String sortDir) {
 
-        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+                Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
+                                : Sort.by(sortBy).descending();
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+                Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<PostResponse> postPage = postService.getPostsByUserId(userId, pageable);
+                Page<PostResponse> postPage = postService.getPostsByUserId(userId, pageable);
 
-        ApiResponse.PageMetadata pageMetadata = ApiResponse.PageMetadata.builder()
-                .currentPage(postPage.getNumber())
-                .pageSize(postPage.getSize())
-                .totalElements(postPage.getTotalElements())
-                .totalPages(postPage.getTotalPages())
-                .hasNext(postPage.hasNext())
-                .hasPrevious(postPage.hasPrevious())
-                .build();
+                ApiResponse.PageMetadata pageMetadata = ApiResponse.PageMetadata.builder()
+                                .currentPage(postPage.getNumber())
+                                .pageSize(postPage.getSize())
+                                .totalElements(postPage.getTotalElements())
+                                .totalPages(postPage.getTotalPages())
+                                .hasNext(postPage.hasNext())
+                                .hasPrevious(postPage.hasPrevious())
+                                .build();
 
-        ApiResponse<List<PostResponse>> response = ApiResponse.<List<PostResponse>>builder()
-                .success(true)
-                .message("Fetched user posts successfully")
-                .data(postPage.getContent())
-                .pageMetadata(pageMetadata)
-                .timestamp(LocalDateTime.now())
-                .statusCode(200)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+                ApiResponse<List<PostResponse>> response = ApiResponse.<List<PostResponse>>builder()
+                                .success(true)
+                                .message("Fetched user posts successfully")
+                                .data(postPage.getContent())
+                                .pageMetadata(pageMetadata)
+                                .timestamp(LocalDateTime.now())
+                                .statusCode(200)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/recent")
-    @Operation(summary = "Lấy các posts gần đây")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> getRecentPosts(
-            @Parameter(description = "Số ngày gần đây", example = "7") @RequestParam(defaultValue = "7") int days,
+        @GetMapping("/recent")
+        @Operation(summary = "Lấy các posts gần đây")
+        public ResponseEntity<ApiResponse<List<PostResponse>>> getRecentPosts(
+                        @Parameter(description = "Số ngày gần đây", example = "7") @RequestParam(defaultValue = "7") int days,
 
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size
 
-    ) {
+        ) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<PostResponse> postPage = postService.getRecentPosts(days, pageable);
+                Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+                Page<PostResponse> postPage = postService.getRecentPosts(days, pageable);
 
-        ApiResponse.PageMetadata pageMetadata = ApiResponse.PageMetadata.builder()
-                .currentPage(postPage.getNumber())
-                .pageSize(postPage.getSize())
-                .totalElements(postPage.getTotalElements())
-                .totalPages(postPage.getTotalPages())
-                .hasNext(postPage.hasNext())
-                .hasPrevious(postPage.hasPrevious())
-                .build();
+                ApiResponse.PageMetadata pageMetadata = ApiResponse.PageMetadata.builder()
+                                .currentPage(postPage.getNumber())
+                                .pageSize(postPage.getSize())
+                                .totalElements(postPage.getTotalElements())
+                                .totalPages(postPage.getTotalPages())
+                                .hasNext(postPage.hasNext())
+                                .hasPrevious(postPage.hasPrevious())
+                                .build();
 
-        ApiResponse<List<PostResponse>> response = ApiResponse.<List<PostResponse>>builder()
-                .success(true)
-                .message(String.format("Fetched posts from last %d days", days))
-                .data(postPage.getContent())
-                .pageMetadata(pageMetadata)
-                .timestamp(java.time.LocalDateTime.now())
-                .statusCode(200)
-                .build();
+                ApiResponse<List<PostResponse>> response = ApiResponse.<List<PostResponse>>builder()
+                                .success(true)
+                                .message(String.format("Fetched posts from last %d days", days))
+                                .data(postPage.getContent())
+                                .pageMetadata(pageMetadata)
+                                .timestamp(java.time.LocalDateTime.now())
+                                .statusCode(200)
+                                .build();
 
-        return ResponseEntity.ok(response);
-    }
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Lấy chi tiết một post")
-    public ResponseEntity<ApiResponse<PostResponse>> getPostById(@PathVariable Long id) {
-        PostResponse post = postService.getPostById(id);
-        ApiResponse<PostResponse> response = ApiResponse.success(post, "Post retrieved successfully");
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/{id}")
+        @Operation(summary = "Lấy chi tiết một post")
+        public ResponseEntity<ApiResponse<PostResponse>> getPostById(@PathVariable Long id) {
+                PostResponse post = postService.getPostById(id);
+                ApiResponse<PostResponse> response = ApiResponse.success(post, "Post retrieved successfully");
+                return ResponseEntity.ok(response);
+        }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Cập nhật post")
-    public ResponseEntity<ApiResponse<PostResponse>> updatePost(@PathVariable Long id,
-            @Valid @RequestBody PostUpdateRequest request) {
+        @PutMapping("/{id}")
+        @Operation(summary = "Cập nhật post")
+        public ResponseEntity<ApiResponse<PostResponse>> updatePost(@PathVariable Long id,
+                        @Valid @RequestBody PostUpdateRequest request) {
 
-        PostResponse post = postService.updatePost(id, request);
-        ApiResponse<PostResponse> response = ApiResponse.success(post, "Post updated successfully");
-        return ResponseEntity.ok(response);
-    }
+                PostResponse post = postService.updatePost(id, request);
+                ApiResponse<PostResponse> response = ApiResponse.success(post, "Post updated successfully");
+                return ResponseEntity.ok(response);
+        }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Xóa post")
-    public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable Long id) {
-        postService.deletePost(id);
-        ApiResponse<Void> response = ApiResponse.success(null, "Post deleted successfully");
-        return ResponseEntity.ok(response);
-    }
+        /**
+         * SOFT DELETE
+         */
+        @DeleteMapping("/{id}")
+        @Operation(summary = "Xóa post (soft delete)")
+        public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable Long id) {
+                postService.deletePost(id);
+                ApiResponse<Void> response = ApiResponse.success(null, "Post deleted successfully (can restore)");
+                return ResponseEntity.ok(response);
+        }
+
+        /**
+         * RESTORE
+         */
+        @PutMapping("/{id}/restore")
+        @Operation(summary = "Khôi phục post đã xoá", description = "Khôi phục post đã bị soft delete")
+        public ResponseEntity<ApiResponse<PostResponse>> restorePost(@PathVariable Long id) {
+                PostResponse restoredPost = postService.restorePost(id);
+
+                ApiResponse<PostResponse> response = ApiResponse.success(restoredPost,
+                                "Post đã được khôi phục thành công");
+                return ResponseEntity.ok(response);
+        }
+
+        /**
+         * Lấy danh sách posts đã xoá
+         */
+        @GetMapping("/deleted")
+        @Operation(summary = "Lấy các posts đã xoá", description = "Xem lại các posts đã bị soft delete (dành cho user/admin)")
+        public ResponseEntity<ApiResponse<List<PostResponse>>> getDeletedPosts(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size,
+                        @RequestParam(defaultValue = "deletedAt") String sortBy,
+                        @RequestParam(defaultValue = "desc") String sortDir) {
+
+                Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
+                                : Sort.by(sortBy).descending();
+                Pageable pageable = PageRequest.of(page, size, sort);
+
+                Page<PostResponse> postPage = postService.getDeletedPosts(pageable);
+
+                ApiResponse.PageMetadata pageMetadata = ApiResponse.PageMetadata.builder()
+                                .currentPage(postPage.getNumber())
+                                .pageSize(postPage.getSize())
+                                .totalElements(postPage.getTotalElements())
+                                .totalPages(postPage.getTotalPages())
+                                .hasNext(postPage.hasNext())
+                                .hasPrevious(postPage.hasPrevious())
+                                .build();
+
+                ApiResponse<List<PostResponse>> response = ApiResponse.<List<PostResponse>>builder()
+                                .success(true)
+                                .message("Fetched deleted posts successfully")
+                                .data(postPage.getContent())
+                                .pageMetadata(pageMetadata)
+                                .timestamp(LocalDateTime.now())
+                                .statusCode(200)
+                                .build();
+
+                return ResponseEntity.ok(response);
+        }
+
+        /**
+         * HARD DELETE
+         */
+        @DeleteMapping("/{id}/permanent")
+        @Operation(summary = "Xoá vĩnh viễn post (ADMIN ONLY)", description = "⚠️ CẢNH BÁO: Hành động này KHÔNG THỂ KHÔI PHỤC!")
+        public ResponseEntity<ApiResponse<Void>> hardDeletePost(@PathVariable Long id) {
+                postService.hardDeletePost(id);
+                ApiResponse<Void> response = ApiResponse.success(null, "Post đã được xoá vĩnh viễn");
+                return ResponseEntity.ok(response);
+        }
 
 }

@@ -2,17 +2,22 @@ package com.example.blogapi.dto.response;
 
 import java.time.LocalDateTime;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class PostResponse {
-    private Long id;
-    private String title;
-    private String content;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private String createdBy;
-    private String updatedBy;
-    private String authorUsername;
+    Long id;
+    String title;
+    String content;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
+    String createdBy;
+    String updatedBy;
+    LocalDateTime deletedAt;
+    String deletedBy;
+    String authorUsername;
 
 }

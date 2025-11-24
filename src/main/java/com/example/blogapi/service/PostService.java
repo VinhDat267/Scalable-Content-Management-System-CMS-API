@@ -19,6 +19,7 @@ import com.example.blogapi.exception.ResourceNotFoundException;
 import com.example.blogapi.mapper.PostMapper;
 import com.example.blogapi.repository.PostRepository;
 import com.example.blogapi.repository.UserRepository;
+import com.example.blogapi.util.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +86,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostResponse> getAllPosts() {
         log.warn("⚠️ Using deprecated getAllPosts() without pagination! Consider migrating to paginated version.");
-        return postRepository.findAll().stream()
+        return postRepository.findAll(Pageable.unpaged()).stream()
                 .map(postMapper::toPostResponse)
                 .collect(Collectors.toList());
     }
@@ -176,17 +177,74 @@ public class PostService {
         return postMapper.toPostResponse(updatedPost);
     }
 
+    /**
+     * SOFT DELETE - Đánh dấu đã xoá thay vì xoá vĩnh viễn
+     */
     @Transactional
     @PreAuthorize("@resourceSecurityService.isPostAuthor(#id)")
     public void deletePost(Long id) {
-        log.warn("Deleting post with ID: {}", id);
-        if (!postRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Không tìm thấy post với ID: " + id);
-        }
+        log.warn("Soft deleting post with ID: {}", id);
+
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy post với ID: " + id));
+
+        String currentUsername = SecurityUtils.getCurrentUsername();
+        post.softDelete(currentUsername);
+        postRepository.save(post);
+
+        log.info("Post with ID: {} soft deleted by user: {}", id, currentUsername);
+
+    }
+
+    /**
+     * HARD DELETE - Xoá vĩnh viễn (chỉ dành cho ADMIN)
+     */
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    public void hardDeletePost(Long id) {
+        log.error("⚠️ HARD DELETING post with ID: {} - This action is IRREVERSIBLE!", id);
+
+        Post post = postRepository.findByIdIncludingDeleted(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy post với ID: " + id));
 
         postRepository.deleteById(id);
 
-        log.info("Post with ID: {} deleted successfully", id);
+        log.info("Post with ID: {} permanently deleted", id);
+    }
+
+    /**
+     * RESTORE - Khôi phục post đã bị soft delete
+     */
+    @Transactional
+    @PreAuthorize("@resourceSecurityService.isPostAuthor(#id)")
+    public PostResponse restorePost(Long id) {
+        log.info("Restoring post with ID: {}", id);
+
+        Post post = postRepository.findByIdIncludingDeleted(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy post với ID: " + id));
+
+        if (!post.isDeleted()) {
+            throw new IllegalStateException("Post với ID: " + id + " chưa bị xoá");
+        }
+
+        post.restore();
+        Post restoredPost = postRepository.save(post);
+
+        log.info("Post with ID: {} restored successfully", id);
+
+        return postMapper.toPostResponse(restoredPost);
+    }
+
+    /**
+     * Lấy các posts đã bị xoá (dành cho admin hoặc user xem lại)
+     */
+    @Transactional(readOnly = true)
+    @PreAuthorize("isAuthenticated()")
+    public Page<PostResponse> getDeletedPosts(Pageable pageable) {
+        log.info("Fetching deleted posts - Page: {}, Size: {}", pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<Post> deletedPosts = postRepository.findDeletedPosts(pageable);
+        return deletedPosts.map(postMapper::toPostResponse);
     }
 
 }
