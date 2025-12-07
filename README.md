@@ -141,7 +141,7 @@ src/main/java/com/example/blogapi
 
   - 📧 Email: datvinh548@gmail.com
   - 🐱 GitHub: [VinhDat267](https://www.google.com/search?q=https://github.com/VinhDat267)
-  - 💼 LinkedIn: [Nguyen Dat Vinh](https://www.linkedin.com/in/yourprofile)
+ 
 
 -----
 
