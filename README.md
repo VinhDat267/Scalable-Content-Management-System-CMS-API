@@ -1,4 +1,4 @@
-````markdown
+
 # 🚀 Scalable CMS RESTful API
 
 ![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=java)
