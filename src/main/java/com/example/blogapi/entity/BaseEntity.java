@@ -14,18 +14,6 @@ import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * Base entity với Auditing và Soft Delete support
- * 
- * 🎯 CHỨC NĂNG:
- * - Auto auditing (createdAt, updatedAt, createdBy, updatedBy)
- * - Soft delete support (deletedAt, deletedBy)
- * 
- * 📝 SỬ DỤNG:
- * - entity.softDelete() → Đánh dấu đã xóa
- * - entity.restore() → Khôi phục
- * - entity.isDeleted() → Kiểm tra trạng thái
- */
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Getter

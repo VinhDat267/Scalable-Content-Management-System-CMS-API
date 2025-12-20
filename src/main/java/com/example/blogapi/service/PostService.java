@@ -197,18 +197,18 @@ public class PostService {
     }
 
     /**
-     * HARD DELETE - Xoá vĩnh viễn (chỉ dành cho ADMIN)
+     * HARD DELETE - Xóa vĩnh viễn (chỉ dành cho admin)
      */
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     public void hardDeletePost(Long id) {
         log.error("⚠️ HARD DELETING post with ID: {} - This action is IRREVERSIBLE!", id);
 
+        // Lấy cả post đã bị soft delete
         Post post = postRepository.findByIdIncludingDeleted(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy post với ID: " + id));
 
-        postRepository.deleteById(id);
-
+        postRepository.delete(post); // Xóa vĩnh viễn
         log.info("Post with ID: {} permanently deleted", id);
     }
 
