@@ -1,5 +1,9 @@
 version: '3.8'
+
 services:
+  # ========================================
+  # PostgreSQL Database Service
+  # ========================================
   postgres:
     image: postgres:17.6-bookworm
     container_name: blog_postgres
@@ -8,24 +12,66 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Ndv@22092005
       POSTGRES_DB: blogdb
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-network
 
+  # ========================================
+  # Spring Boot Application Service
+  # ========================================
   blogapi:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: blogapi
+    restart: always
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: prod
+      
+      # Database Connection
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: blogdb
       DB_USER: postgres
       DB_PASSWORD: Ndv@22092005
+      
+      # JWT Secret (CHANGE IN PRODUCTION!)
+      JWT_SECRET: 58c6bc688fe95096789a34aae52a9808c6bcbf18ceeabcbbcca4c70168fc426e
+      JWT_EXPIRATION: 86400000
     ports:
       - "8080:8080"
+    networks:
+      - blog-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
+# ========================================
+# Networks
+# ========================================
+networks:
+  blog-network:
+    driver: bridge
+
+# ========================================
+# Volumes
+# ========================================
 volumes:
   pgdata:
+    driver: local

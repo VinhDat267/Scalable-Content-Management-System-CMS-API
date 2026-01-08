@@ -216,7 +216,7 @@ public class PostService {
      * RESTORE - Khôi phục post đã bị soft delete
      */
     @Transactional
-    @PreAuthorize("@resourceSecurityService.isPostAuthor(#id)")
+    @PreAuthorize("@resourceSecurityService.isPostAuthorIncludingDeleted(#id)")
     public PostResponse restorePost(Long id) {
         log.info("Restoring post with ID: {}", id);
 

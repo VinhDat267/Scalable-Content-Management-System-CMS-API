@@ -60,5 +60,5 @@ server:
 # JWT Configuration
 app:
   jwt:
-    secret: 58c6bc688fe95096789a34aae52a9808c6bcbf18ceeabcbbcca4c70168fc426e
+    secret: ${JWT_SECRET:58c6bc688fe95096789a34aae52a9808c6bcbf18ceeabcbbcca4c70168fc426e}
     expiration: 86400000

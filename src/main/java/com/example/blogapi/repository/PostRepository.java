@@ -1,11 +1,13 @@
 package com.example.blogapi.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -32,7 +34,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
   /**
    * Kiểm tra post có tồn tại không (loại trừ đã xoá)
    */
-  @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Post p WHERE p.id = :id AND p.deletedAT IS NULL")
+  @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Post p WHERE p.id = :id AND p.deletedAt IS NULL")
   boolean existsById(@Param("id") Long id);
 
   // ================ CUSTOM QUERIRES ================
@@ -79,5 +81,27 @@ public interface PostRepository extends JpaRepository<Post, Long> {
    */
   @Query("SELECT p FROM Post p WHERE p.id = :id")
   Optional<Post> findByIdIncludingDeleted(@Param("id") Long id);
+
+  // ====== ScheduleCleanup ========
+
+  /**
+   * Tìm các posts đã bị xóa trước một thời điểm nhất định
+   * Dùng cho cleanup scheduler
+   */
+  @Query("SELECT p FROM Post p WHERE p.deletedAt IS NOT NULL AND p.deletedAt < :threshold")
+  List<Post> findByDeletedAtBefore(@Param("threshold") LocalDateTime threshold);
+
+  /**
+   * Đếm số lượng posts cần cleanup
+   */
+  @Query("SELECT COUNT(p) FROM Post p WHERE p.deletedAt IS NOT NULL AND p.deletedAt < :threshold")
+  Long countByDeletedAtBefore(@Param("threshold") LocalDateTime threshold);
+
+  /**
+   * Xóa vĩnh viễn các posts đã bị soft delete trước một thời điểm
+   */
+  @Modifying
+  @Query("DELETE FROM Post p WHERE p.deletedAt IS NOT NULL AND p.deletedAt < :threshold")
+  int deleteByDeletedAtBefore(@Param("threshold") LocalDateTime threshold);
 
 }

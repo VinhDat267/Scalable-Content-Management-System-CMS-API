@@ -45,3 +45,9 @@ build/
 UPGRADE_PLAN.md
 .github
 
+Blog API - Complete Test Suite.postman_test_run.json
+Blog_API_Dev_Environment.postman_environment.json
+Blog_API_Postman_Collection.json
+Blog_API_Prod_Environment.postman_environment.json
+POSTMAN_FILES_README.md
+POSTMAN_TESTING_GUIDE.md

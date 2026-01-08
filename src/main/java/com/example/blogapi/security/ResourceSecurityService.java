@@ -75,6 +75,48 @@ public class ResourceSecurityService {
     }
 
     /**
+     * Check user hiện tại có phải là author của post không (bao gồm cả post đã xóa)
+     * Dùng cho restore operation
+     * 
+     * @param postId ID của post cần check
+     * @return true nếu user là author HOẶC là ADMIN
+     */
+    public boolean isPostAuthorIncludingDeleted(Long postId) {
+        log.debug("Checking post ownership (including deleted) for postId: {}", postId);
+
+        // 1. Get current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            log.warn("No authenticated user found");
+            return false;
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String currentUsername = userDetails.getUsername();
+
+        // 2. Check if user is ADMIN (admin can do anything)
+        boolean isAdmin = userDetails.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            log.debug("User {} is ADMIN, access granted", currentUsername);
+            return true;
+        }
+
+        // 3. Load post (including deleted) and check author
+        Post post = postRepository.findByIdIncludingDeleted(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy post với ID: " + postId));
+
+        String postAuthor = post.getUser().getUsername();
+        boolean isAuthor = postAuthor.equals(currentUsername);
+
+        log.debug("Post author: {}, Current user: {}, Is author: {}, Post deleted: {}",
+                postAuthor, currentUsername, isAuthor, post.isDeleted());
+
+        return isAuthor;
+    }
+
+    /**
      * Check user hiện tại có phải là author của comment không
      * 
      * @param commentId ID của comment cần check

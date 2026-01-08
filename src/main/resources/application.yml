@@ -41,6 +41,7 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
   level:
     root: INFO
+    com.example.blogapi.service.CleanupSchedulerService: INFO
 
 # ========================================
 # SECURITY (Basic Auth - Phase 1)
@@ -48,5 +49,13 @@ logging:
 # JWT se duoc config rieng trong tung profile
 app:
   jwt:
-    secret: day-la-mot-secret-key-rat-dai-va-an-toan-cho-ung-dung-blog
+    secret: ${JWT_SECRET}
     expiration: 86400000
+# Application-specific configurations
+  cleanup:
+    enabled: true
+    retention-days: 30
+    cron: "0 0 2 * * ?"
+
+
+  

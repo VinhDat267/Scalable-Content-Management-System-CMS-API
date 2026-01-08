@@ -13,13 +13,40 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:blogdb}
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    password: ${DB_PASSWORD:Ndv@22092005}
+    driver-class-name: org.postgresql.Driver
+    
+    # HikariCP Connection Pool Settings (Production Optimized)
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: BlogAPI-HikariCP
+      
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate  # ✅ CHANGED: validate only, Flyway manages schema
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false  # Disable formatting in production
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    show-sql: false  # Disable SQL logging in production
+    open-in-view: false  # Best practice
+    
+  # ========================================
+  # FLYWAY CONFIGURATION
+  # ========================================
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
 
 # ========================================
 # LOGGING
@@ -46,8 +73,8 @@ server:
 # ========================================
 # SECURITY
 # ========================================
-# JWT Configuration (sẽ dùng ở Phase 3)
+# JWT Configuration 
 app:
   jwt:
-    secret: day-la-mot-secret-key-rat-dai-va-an-toan-cho-ung-dung-blog
+    secret: ${JWT_SECRET}
     expiration: 86400000
