@@ -36,6 +36,16 @@ spring:
       hibernate:
         format_sql: true
 
+  # ========================================
+  # REDIS CONFIGURATION (Development)
+  # ========================================
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: # No password for dev
+
+
 # ========================================
 # LOGGING
 # ========================================
@@ -44,6 +54,13 @@ logging:
     org:
       hibernate:
         SQL: DEBUG
+
+      # Enable Redis debug logs
+      springframework:
+        cache: DEBUG
+        data: 
+          redis: DEBUG
+          
     com:
       example:
         blogapi: DEBUG

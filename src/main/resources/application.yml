@@ -13,6 +13,28 @@ spring:
   # Application Info
   application:
     name: Blog API
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # Default 10 minutes (milliseconds)
+      cache-null-values: false
+      key-prefix: "blogapi:"
+      use-key-prefix: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+
+      # Lettuce Connection Pool
+      lettuce:
+        pool:
+          max-active: 8 # Max connections
+          max-idle: 8 # Max idle connections
+          min-idle: 2 # Min idle connections
+          max-wait: -1ms # Max wait time (-1 = unlimited)
+        shutdown-timeout: 100ms
 
 # ========================================
 # SERVER CONFIGURATION

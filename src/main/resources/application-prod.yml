@@ -48,6 +48,22 @@ spring:
     locations: classpath:db/migration
     validate-on-migrate: true
 
+  # ========================================
+  # REDIS CONFIGURATION (Production)
+  # ========================================
+  data:
+    redis: 
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+
+      # Production optimized pool
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+
 # ========================================
 # LOGGING
 # ========================================
