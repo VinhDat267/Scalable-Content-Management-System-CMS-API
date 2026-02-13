@@ -3,7 +3,9 @@ package com.example.blogapi.config;
 import java.time.Duration;
 
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -22,7 +24,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Configuration
 @EnableCaching
-public class RedisConfig {
+public class RedisConfig implements CachingConfigurer {
 
         @Bean
         public RedisConnectionFactory redisConnectionFactory() {
@@ -102,6 +104,15 @@ public class RedisConfig {
                                 defaultConfig.entryTtl(Duration.ofMinutes(2)));
 
                 return builder.build();
+        }
+
+        /**
+         * Register CustomCacheErrorHandler for graceful degradation.
+         * When Redis is down, the app continues to work by falling back to DB queries.
+         */
+        @Override
+        public CacheErrorHandler errorHandler() {
+                return new CustomCacheErrorHandler();
         }
 
 }
