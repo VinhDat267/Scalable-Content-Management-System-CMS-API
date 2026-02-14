@@ -1,5 +1,6 @@
 package com.example.blogapi.dto.response;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import lombok.AccessLevel;
@@ -8,7 +9,9 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserResponse {
+public class UserResponse implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     Long id;
     String username;
     String role;
