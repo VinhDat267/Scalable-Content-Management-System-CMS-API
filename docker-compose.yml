@@ -26,6 +26,26 @@ services:
       - blog-network
 
   # ========================================
+  # Redis Cache Service
+  # ========================================
+  redis:
+    image: redis:7-alpine
+    container_name: blog_redis
+    restart: always
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blog-network
+
+  # ========================================
   # Spring Boot Application Service
   # ========================================
   blogapi:
@@ -37,6 +57,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       # Spring Profile
       SPRING_PROFILES_ACTIVE: prod
@@ -47,6 +69,10 @@ services:
       DB_NAME: blogdb
       DB_USER: postgres
       DB_PASSWORD: Ndv@22092005
+
+      # Redis Connection
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       
       # JWT Secret (CHANGE IN PRODUCTION!)
       JWT_SECRET: 58c6bc688fe95096789a34aae52a9808c6bcbf18ceeabcbbcca4c70168fc426e
@@ -74,4 +100,6 @@ networks:
 # ========================================
 volumes:
   pgdata:
+    driver: local
+  redisdata:
     driver: local
