@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,8 +37,9 @@ public class CommentService {
 
     @Transactional
     @PreAuthorize("isAuthenticated()")
+    @CacheEvict(value = "comments", allEntries = true)
     public CommentResponse createComment(Long postId, Long userId, CommentCreateRequest request) {
-        log.info("Creating comment for post ID {} by user ID {}", postId, userId);
+        log.info("Creating comment for post ID {} by user ID {} - evicting comments cache", postId, userId);
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài viết với ID: " + postId));
@@ -64,8 +67,9 @@ public class CommentService {
      * @return Page<CommentResponse>
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "comments", key = "#postId + '_' + #pageable.pageNumber + '_' + #pageable.pageSize")
     public Page<CommentResponse> getCommentsByPostId(Long postId, Pageable pageable) {
-        log.info("Fetching comments for post ID: {} - Page: {}, Size: {}",
+        log.info("Fetching comments for post ID: {} - Page: {}, Size: {} (cache MISS - querying DB)",
                 postId,
                 pageable.getPageNumber(),
                 pageable.getPageSize());
@@ -143,8 +147,9 @@ public class CommentService {
 
     @Transactional
     @PreAuthorize("@resourceSecurityService.isCommentAuthor(#commentId)")
+    @CacheEvict(value = "comments", allEntries = true)
     public CommentResponse updateComment(Long postId, Long commentId, CommentUpdateRequest request) {
-        log.info("Updating comment ID {} for post ID {}", commentId, postId);
+        log.info("Updating comment ID {} for post ID {} - evicting comments cache", commentId, postId);
 
         if (!postRepository.existsById(postId)) {
             throw new ResourceNotFoundException("Không tìm thấy post với ID: " + postId);
@@ -166,8 +171,9 @@ public class CommentService {
 
     @Transactional
     @PreAuthorize("@resourceSecurityService.isCommentAuthor(#commentId)")
+    @CacheEvict(value = "comments", allEntries = true)
     public void deleteComment(Long postId, Long commentId) {
-        log.warn("Deleting comment ID {} from post ID {}", commentId, postId);
+        log.warn("Deleting comment ID {} from post ID {} - evicting comments cache", commentId, postId);
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bình luận với ID: " + commentId));

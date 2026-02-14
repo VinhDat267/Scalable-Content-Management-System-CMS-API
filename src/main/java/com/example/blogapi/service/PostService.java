@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,6 +37,7 @@ public class PostService {
 
     @Transactional
     @PreAuthorize("isAuthenticated()")
+    @CacheEvict(value = "posts", allEntries = true)
     public PostResponse createPost(PostCreateRequest request) {
         log.info("Creating post for user ID {}", request.getUserId());
 
@@ -51,7 +54,6 @@ public class PostService {
         log.info("Post created successfully with ID: {}", savePosted.getId());
 
         return postMapper.toPostResponse(savePosted);
-
     }
 
     /**
@@ -155,8 +157,9 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "posts", key = "#id")
     public PostResponse getPostById(Long id) {
-        log.info("Fetching post with ID: {}", id);
+        log.info("Fetching post with ID: {} (cache MISS - querying DB)", id);
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy post với ID: " + id));
 
@@ -165,8 +168,9 @@ public class PostService {
 
     @Transactional
     @PreAuthorize("@resourceSecurityService.isPostAuthor(#id)")
+    @CacheEvict(value = "posts", allEntries = true)
     public PostResponse updatePost(Long id, PostUpdateRequest request) {
-        log.info("Updating post with ID: {}", id);
+        log.info("Updating post with ID: {} - evicting posts cache", id);
         Post existingPost = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy post với ID: " + id));
         existingPost.setTitle(request.getTitle());
@@ -182,8 +186,9 @@ public class PostService {
      */
     @Transactional
     @PreAuthorize("@resourceSecurityService.isPostAuthor(#id)")
+    @CacheEvict(value = "posts", allEntries = true)
     public void deletePost(Long id) {
-        log.warn("Soft deleting post with ID: {}", id);
+        log.warn("Soft deleting post with ID: {} - evicting posts cache", id);
 
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy post với ID: " + id));
@@ -201,6 +206,7 @@ public class PostService {
      */
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
+    @CacheEvict(value = "posts", allEntries = true)
     public void hardDeletePost(Long id) {
         log.error("⚠️ HARD DELETING post with ID: {} - This action is IRREVERSIBLE!", id);
 
@@ -217,8 +223,9 @@ public class PostService {
      */
     @Transactional
     @PreAuthorize("@resourceSecurityService.isPostAuthorIncludingDeleted(#id)")
+    @CacheEvict(value = "posts", allEntries = true)
     public PostResponse restorePost(Long id) {
-        log.info("Restoring post with ID: {}", id);
+        log.info("Restoring post with ID: {} - evicting posts cache", id);
 
         Post post = postRepository.findByIdIncludingDeleted(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy post với ID: " + id));

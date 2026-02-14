@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.blogapi.dto.request.UserCreateRequest;
@@ -28,6 +30,7 @@ public class UserService {
     private final UserMapper userMapper;
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public UserResponse createUser(UserCreateRequest request) {
         log.info("Creating user with username: {}", request.getUsername());
 
@@ -46,8 +49,9 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "users", key = "#id")
     public UserResponse getUserById(Long id) {
-        log.info("Fetching user with ID: {}", id);
+        log.info("Fetching user with ID: {} (cache MISS - querying DB)", id);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với ID: " + id));
@@ -115,8 +119,9 @@ public class UserService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void deleteUser(Long id) {
-        log.warn("Deleting user with ID: {}", id);
+        log.warn("Deleting user with ID: {} - evicting users cache", id);
 
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("Không tìm thấy user với ID: " + id);
